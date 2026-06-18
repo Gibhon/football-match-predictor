@@ -219,6 +219,7 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
     df["H2H_Home_WinRate"] = [x[0] for x in h2h_stats]
     df["H2H_Away_WinRate"] = [x[1] for x in h2h_stats]
 
+    df["Season"] = df["Date"].dt.year
     # Sliding the Labels and non-training data to the back
     cols = list(df.columns)
     cols_tobe_moved = ["FTHG", "FTAG", "FTR"]
