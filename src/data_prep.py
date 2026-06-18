@@ -100,6 +100,21 @@ def clean_df(raw_df: pd.DataFrame) -> pd.DataFrame:
         "AvgCAHH",
         "AvgCAHA",
         "Referee",
+        "HTAG",
+        "HTHG",
+        "HTR",
+        "HS",
+        "AS",
+        "HST",
+        "AST",
+        "HF",
+        "AF",
+        "HC",
+        "AC",
+        "HY",
+        "AY",
+        "HR",
+        "AR",
     ]
     clean_df = raw_df.drop(columns=drop_cols)
     clean_df = clean_df.dropna()
