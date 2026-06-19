@@ -114,7 +114,3 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.drop(columns="Match_id")
     return df
-
-
-def save_df(df, file_path=BASE_DIR / "data" / "processed" / "processed_df.csv"):
-    df.to_csv(file_path)

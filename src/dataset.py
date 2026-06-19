@@ -3,14 +3,20 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import DataLoader, Dataset
 
 
 class FootballDataset(Dataset):
-    def __init__(self, features, labels):
+    def __init__(self, features, labels, mean=None, std=None):
         super().__init__()
         features = torch.tensor(features, dtype=torch.float32)
-        self.features = (features - features.mean(dim=0)) / features.std(dim=0)
+        if mean is None and std is None:
+            self.mean = features.mean(0)
+            self.std = features.std(0)
+        else:
+            self.mean = mean
+            self.std = std
+        self.features = (features - self.mean) / self.std
         self.labels = torch.tensor(labels, dtype=torch.long)
 
     def __len__(self):
@@ -27,20 +33,30 @@ def read_data(
     / "processed_df.csv",
 ):
     data_df = pd.read_csv(file_path)
-    data_df = data_df.drop(columns=["Date", "HomeTeam", "AwayTeam", "FTAG", "FTHG"])
-    data_np = data_df.to_numpy()
+    condition = data_df["Season"] == 2024
+    train_data_df = data_df[~condition]
+    val_data_df = data_df[condition]
 
-    features_np_final = data_np[:, :-1].astype(np.float32)
-    labels_np = data_np[:, -1]
+    def data_processor(data_df):
+        data_df = data_df.drop(
+            columns=["Date", "HomeTeam", "AwayTeam", "FTAG", "FTHG", "Season"]
+        )
+        data_np = data_df.to_numpy()
 
-    conditions = [(labels_np == "H"), (labels_np == "A"), (labels_np == "D")]
-    choices = [1, 2, 0]
+        features_np = data_np[:, :-1].astype(np.float32)
+        labels_np = data_np[:, -1]
 
-    labels_np_collapsed = np.select(conditions, choices)
-    labels_np_final = labels_np_collapsed
+        conditions = [(labels_np == "H"), (labels_np == "A"), (labels_np == "D")]
+        choices = [1, 2, 0]
+        labels_np = np.select(conditions, choices)
 
-    return features_np_final.dtype, labels_np_final.dtype
+        return features_np, labels_np
+
+    train_features_np, train_labels_np = data_processor(train_data_df)
+    val_features_np, val_labels_np = data_processor(val_data_df)
+
+    return train_features_np, train_labels_np, val_features_np, val_labels_np
 
 
-def load_data(dateset):
-    pass
+def load_data(dataset, shuffle):
+    return DataLoader(dataset, shuffle=shuffle, batch_size=128)

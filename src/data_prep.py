@@ -119,3 +119,7 @@ def clean_df(raw_df: pd.DataFrame) -> pd.DataFrame:
     clean_df = raw_df.drop(columns=drop_cols)
     clean_df = clean_df.dropna()
     return clean_df
+
+
+def save_df(df, file_path=BASE_DIR / "data" / "processed" / "processed_df.csv"):
+    df.to_csv(file_path)
