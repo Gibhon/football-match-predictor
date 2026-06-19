@@ -46,8 +46,8 @@ def read_data(
         features_np = data_np[:, :-1].astype(np.float32)
         labels_np = data_np[:, -1]
 
-        conditions = [(labels_np == "H"), (labels_np == "A"), (labels_np == "D")]
-        choices = [1, 2, 0]
+        conditions = [(labels_np == "D"), (labels_np == "H"), (labels_np == "A")]
+        choices = [0, 1, 2]
         labels_np = np.select(conditions, choices)
 
         return features_np, labels_np
@@ -58,5 +58,5 @@ def read_data(
     return train_features_np, train_labels_np, val_features_np, val_labels_np
 
 
-def load_data(dataset, shuffle):
-    return DataLoader(dataset, shuffle=shuffle, batch_size=128)
+def load_data(dataset, shuffle, num_workers=1):
+    return DataLoader(dataset, shuffle=shuffle, batch_size=128, num_workers=num_workers)

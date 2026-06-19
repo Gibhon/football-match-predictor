@@ -1,5 +1,5 @@
 import numpy as np
-from dataset import read_data
+from src.dataset import read_data
 
 train_features, train_labels, val_features, val_labels = read_data()
 

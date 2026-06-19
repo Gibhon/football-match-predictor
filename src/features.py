@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import data_prep
 import pandas as pd
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -114,3 +115,9 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.drop(columns="Match_id")
     return df
+
+
+if __name__ == "__main__":
+    clean_data = data_prep.clean_df(data_prep.combine_df())
+    modified_data = modify_df(clean_data)
+    data_prep.save_df(modified_data)

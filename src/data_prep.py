@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pandas as pd
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+base_dir = Path(__file__).resolve().parent.parent
 
 
-def combine_df(base_path=BASE_DIR / "data" / "raw") -> pd.DataFrame:
+def combine_df(base_path=base_dir / "data" / "raw") -> pd.DataFrame:
     raw_dfs: pd.DataFrame = [pd.read_csv(file) for file in base_path.rglob("*.csv")]
     if not raw_dfs:
         raise FileNotFoundError(f"No CSV files found in {base_path}")
@@ -121,5 +121,5 @@ def clean_df(raw_df: pd.DataFrame) -> pd.DataFrame:
     return clean_df
 
 
-def save_df(df, file_path=BASE_DIR / "data" / "processed" / "processed_df.csv"):
+def save_df(df, file_path=base_dir / "data" / "processed" / "processed_df.csv"):
     df.to_csv(file_path)
