@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(42)
-    football_model = model.FootballPredictor().to(device)
+    football_model = model.FootballPredictor(n_inputs=11).to(device)
 
     weights = torch.tensor([1.2318, 0.7799, 1.1038]).to(device)
     loss_fn = nn.CrossEntropyLoss(weight=weights)

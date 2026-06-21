@@ -59,4 +59,4 @@ def read_data(
 
 
 def load_data(dataset, shuffle, num_workers=1):
-    return DataLoader(dataset, shuffle=shuffle, batch_size=128, num_workers=num_workers)
+    return DataLoader(dataset, shuffle=shuffle, batch_size=32, num_workers=num_workers)
