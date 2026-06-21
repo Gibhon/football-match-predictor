@@ -10,14 +10,17 @@ def train(
     scheduler,
     device,
     filepath,
+    val_data_loader,
 ):
-    history = {"loss": [], "Accuracy": []}
+    history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
     min_loss_epoch = 0
     min_loss = 100
+
     for epoch in range(n_epoch):
         total_loss = 0
         n_accurate = 0
         n_total = 0
+
         for x_batch, y_batch in data_loader:
             x_batch, y_batch = x_batch.to(device), y_batch.to(device)
             optimizer.zero_grad(set_to_none=True)
@@ -29,14 +32,20 @@ def train(
             total_loss += loss.item()
             n_accurate += (prediction_final == y_batch).sum().item()
             n_total += prediction_final.size(0)
+
         scheduler.step()
         epoch_loss = total_loss / len(data_loader)
         epoch_acc = (n_accurate / n_total) * 100
-        history["loss"].append(epoch_loss)
-        history["Accuracy"].append(epoch_acc)
+        history["train_loss"].append(epoch_loss)
+        history["train_acc"].append(epoch_acc)
+
         if epoch_loss < min_loss:
             min_loss = epoch_loss
             min_loss_epoch = epoch
+
+        val_loss, val_acc = val(model, val_data_loader, loss_fn, device)
+        history["val_loss"].append(val_loss)
+        history["val_acc"].append(val_acc)
 
     torch.save(model.state_dict(), filepath)
     return (min_loss_epoch, min_loss, history)
@@ -48,6 +57,7 @@ def val(model, data_loader, loss_fn, device):
     n_accurate = 0
 
     model.eval()
+
     with torch.no_grad():
         for x_batch, y_batch in data_loader:
             x_batch, y_batch = x_batch.to(device), y_batch.to(device)
@@ -68,6 +78,7 @@ def test(model, data_loader, device, filepath):
     n_accurate = 0
 
     model.eval()
+
     with torch.no_grad():
         for x_batch, y_batch in data_loader:
             x_batch, y_batch = x_batch.to(device), y_batch.to(device)

@@ -70,6 +70,7 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
     timeline["TotalWins"] = timeline["Outcome"].map({"W": 1, "L": 0, "D": 0})
     timeline["GD"] = timeline["GoalsScored"] - timeline["GoalsConceded"]
 
+    # Preparing shifts
     grouped_timeline = timeline.groupby("Team")
     shifts_points = [grouped_timeline["PointsEarned"].shift(i) for i in range(1, 6)]
     weighed_shifts_points = [point * (5 - i) for i, point in enumerate(shifts_points)]
@@ -78,6 +79,7 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
     shifts_wins = [grouped_timeline["TotalWins"].shift(i) for i in range(1, 6)]
     shifts_gd = [grouped_timeline["GD"].shift(i) for i in range(1, 6)]
 
+    # concating the shifts
     concated_shift_points = pd.concat(weighed_shifts_points, axis=1)
     timeline["TotalFormScore"] = (
         concated_shift_points.sum(axis=1, min_count=1)
@@ -96,9 +98,11 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
     timeline["GD"] = pd.concat(shifts_gd, axis=1).sum(axis=1, min_count=1)
     timeline["RD"] = grouped_timeline["Date"].diff().dt.days.fillna(4)
 
+    # Connecting combined timeline to seprate timelines of home & away
     home_timeline = timeline[timeline["Venue"] == "H"].set_index("Match_id")
     away_timeline = timeline[timeline["Venue"] == "A"].set_index("Match_id")
 
+    # Mapping features to main DF
     df["HomeRestDays"] = df["Match_id"].map(home_timeline["RD"])
     df["AwayRestDays"] = df["Match_id"].map(away_timeline["RD"])
     df["HomeFormScore"] = df["Match_id"].map(home_timeline["TotalFormScore"])
@@ -112,15 +116,18 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
     df["GD_Home"] = df["Match_id"].map(home_timeline["GD"])
     df["GD_Away"] = df["Match_id"].map(away_timeline["GD"])
 
+    # h2h feature
     h2h_stats = df.apply(lambda r: get_h2h_wr(df, r, N=5), axis=1)
     df["H2H_Home_WinRate"] = [x[0] for x in h2h_stats]
     df["H2H_Away_WinRate"] = [x[1] for x in h2h_stats]
 
+    # Elo Feature
     home_elo_list, away_elo_list = elo_determiner(df)
     df["HomeELO"] = home_elo_list
     df["AwayELO"] = away_elo_list
 
     df["Season"] = df["Date"].dt.year
+
     # Sliding the Labels and non-training data to the back
     cols = list(df.columns)
     cols_tobe_moved = ["FTHG", "FTAG", "FTR"]
@@ -129,6 +136,7 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
         cols.append(col)
     df = df[cols]
 
+    # Final cleaning
     df = df.drop(columns="Match_id")
     df[["GD_Home", "GD_Away"]] = df[["GD_Home", "GD_Away"]].fillna(0)
     return df
