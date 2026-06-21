@@ -31,16 +31,16 @@ if __name__ == "__main__":
     torch.manual_seed(42)
     football_model = model.FootballPredictor(n_inputs=20).to(device)
 
-    n_epoch = 10
+    n_epoch = 60
     weights = torch.tensor([1.2157, 0.7619, 1.1561]).to(device)
     loss_fn = nn.CrossEntropyLoss(weight=weights)
     optimizer = torch.optim.Adam(
-        football_model.parameters(), weight_decay=1e-4, lr=1e-4
+        football_model.parameters(), weight_decay=1e-4, lr=1e-3
     )
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1)
     model_path = base_dir / "model.pth"
 
-    min_loss_epoch, min_loss, history = train.train(
+    min_loss_epoch, min_loss, min_val_loss_epoch, min_val_loss, history = train.train(
         model=football_model,
         n_epoch=n_epoch,
         data_loader=train_data_loader,
@@ -50,6 +50,9 @@ if __name__ == "__main__":
         device=device,
         filepath=model_path,
         val_data_loader=val_data_loader,
+    )
+    print(
+        min_loss, min_loss_epoch, "\n", min_val_loss, min_val_loss_epoch, "\n", history
     )
 
     epochs = [i + 1 for i in range(n_epoch)]

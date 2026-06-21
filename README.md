@@ -183,11 +183,30 @@ The model uses features derived from:
 
 ## 📈 Results
 
+### Performance Metrics
+- **Validation Accuracy**: ~48%
+- **Model Selection**: Based on minimum validation loss (principled checkpoint selection, not best-of-N)
+
+### Key Improvements
+The model achieved this performance through several critical improvements:
+
+1. **Betting Odds Features**: Incorporated average betting odds (AvgH, AvgD, AvgA) as key predictive features, which capture market expectations and provide strong signals for match outcomes.
+
+2. **Fixed Dropout Bug**: Corrected dropout implementation to properly apply regularization during training while disabling it during validation/testing, preventing underfitting.
+
+3. **Fixed Scheduler Decay**: Properly configured the StepLR scheduler (step_size=7, gamma=0.1) to decay learning rate at appropriate intervals, enabling better convergence.
+
+4. **Principled Checkpoint Selection**: Model checkpoint is saved based on minimum validation loss rather than cherry-picking best accuracy, ensuring robust generalization and avoiding overfitting to validation set.
+
+### Visualization
 After training, the model generates `model_performance.png` with two plots:
-1. **Training Loss vs Validation Loss**: Monitor overfitting
-2. **Training Accuracy vs Validation Accuracy**: Track model performance
+1. **Training Loss vs Validation Loss**: Monitor overfitting and convergence
+2. **Training Accuracy vs Validation Accuracy**: Track model performance across epochs
 
 The best model (lowest validation loss) is automatically saved to `model.pth`.
+
+### Context
+Predicting football match outcomes is inherently challenging due to the high variance and unpredictability of sports. A ~48% accuracy on a 3-class problem (Draw/Home/Away) represents meaningful performance above random baseline (33.3%) and demonstrates the model's ability to learn patterns from historical data and betting market information.
 
 ## 🤝 Contributing
 

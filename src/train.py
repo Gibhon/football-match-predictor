@@ -15,11 +15,15 @@ def train(
     history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": []}
     min_loss_epoch = 0
     min_loss = 100
+    min_val_loss_epoch = 0
+    min_val_loss = 100
 
     for epoch in range(n_epoch):
         total_loss = 0
         n_accurate = 0
         n_total = 0
+
+        model.train()
 
         for x_batch, y_batch in data_loader:
             x_batch, y_batch = x_batch.to(device), y_batch.to(device)
@@ -46,9 +50,18 @@ def train(
         val_loss, val_acc = val(model, val_data_loader, loss_fn, device)
         history["val_loss"].append(val_loss)
         history["val_acc"].append(val_acc)
+        if val_loss < min_val_loss:
+            min_val_loss = val_loss
+            min_val_loss_epoch = epoch
+            checkpoint = {
+                "epoch": epoch + 1,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "best_val_loss": min_val_loss,
+            }
+        torch.save(checkpoint, filepath)
 
-    torch.save(model.state_dict(), filepath)
-    return (min_loss_epoch, min_loss, history)
+    return (min_loss_epoch, min_loss, min_val_loss_epoch, min_val_loss, history)
 
 
 def val(model, data_loader, loss_fn, device):
@@ -85,5 +98,6 @@ def test(model, data_loader, device, filepath):
             prediction_dim3 = model(x_batch)
             prediction = torch.argmax(prediction_dim3, dim=1)
             n_accurate += (prediction == y_batch).sum().item()
+            n_total += prediction.size(0)
 
     return (n_accurate / n_total) * 100
