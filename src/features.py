@@ -72,14 +72,18 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
 
     grouped_timeline = timeline.groupby("Team")
     shifts_points = [grouped_timeline["PointsEarned"].shift(i) for i in range(1, 6)]
+    weighed_shifts_points = [point * (5 - i) for i, point in enumerate(shifts_points)]
     shifts_scored = [grouped_timeline["GoalsScored"].shift(i) for i in range(1, 6)]
     shifts_conceded = [grouped_timeline["GoalsConceded"].shift(i) for i in range(1, 6)]
     shifts_wins = [grouped_timeline["TotalWins"].shift(i) for i in range(1, 6)]
     shifts_gd = [grouped_timeline["GD"].shift(i) for i in range(1, 6)]
 
+    concated_shift_points = pd.concat(weighed_shifts_points, axis=1)
     timeline["TotalFormScore"] = (
-        pd.concat(shifts_points, axis=1).sum(axis=1, min_count=1).fillna(0)
-    )
+        concated_shift_points.sum(axis=1, min_count=1)
+        / concated_shift_points.notna().dot([5, 4, 3, 2, 1])
+    ).fillna(0)
+
     timeline["GoalsAVG"] = (
         (pd.concat(shifts_scored, axis=1).sum(axis=1, min_count=1)) / 5
     ).fillna(0)
@@ -90,10 +94,13 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
         (pd.concat(shifts_wins, axis=1).sum(axis=1, min_count=1)) / 5
     ).fillna(0)
     timeline["GD"] = pd.concat(shifts_gd, axis=1).sum(axis=1, min_count=1)
+    timeline["RD"] = grouped_timeline["Date"].diff().dt.days.fillna(4)
 
     home_timeline = timeline[timeline["Venue"] == "H"].set_index("Match_id")
     away_timeline = timeline[timeline["Venue"] == "A"].set_index("Match_id")
 
+    df["HomeRestDays"] = df["Match_id"].map(home_timeline["RD"])
+    df["AwayRestDays"] = df["Match_id"].map(away_timeline["RD"])
     df["HomeFormScore"] = df["Match_id"].map(home_timeline["TotalFormScore"])
     df["AwayFormScore"] = df["Match_id"].map(away_timeline["TotalFormScore"])
     df["HomeGoalsAVG"] = df["Match_id"].map(home_timeline["GoalsAVG"])
@@ -127,7 +134,7 @@ def modify_df(clean_df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def elo_determiner(sorted_df, K=20):
+def elo_determiner(sorted_df, K=20, home_adv=70):
     team_ratings = {}
     home_elo_list = []
     away_elo_list = []
@@ -142,7 +149,7 @@ def elo_determiner(sorted_df, K=20):
         home_elo_list.append(home_elo)
         away_elo_list.append(away_elo)
 
-        x_home = 1 / (1 + 10 ** ((away_elo - home_elo) / 400))
+        x_home = 1 / (1 + 10 ** ((away_elo - (home_elo + home_adv)) / 400))
         x_away = 1 - x_home
 
         actual_home = 1.0 if (result == "H") else (0.5 if result == "D" else 0.0)

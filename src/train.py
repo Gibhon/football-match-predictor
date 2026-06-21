@@ -1,7 +1,16 @@
 import torch
 
 
-def train(model, n_epoch, data_loader, loss_fn, optimizer, scheduler, device, filepath):
+def train(
+    model,
+    n_epoch,
+    data_loader,
+    loss_fn,
+    optimizer,
+    scheduler,
+    device,
+    filepath,
+):
     history = {"loss": [], "Accuracy": []}
     min_loss_epoch = 0
     min_loss = 100
@@ -28,6 +37,7 @@ def train(model, n_epoch, data_loader, loss_fn, optimizer, scheduler, device, fi
         if epoch_loss < min_loss:
             min_loss = epoch_loss
             min_loss_epoch = epoch
+
     torch.save(model.state_dict(), filepath)
     return (min_loss_epoch, min_loss, history)
 
